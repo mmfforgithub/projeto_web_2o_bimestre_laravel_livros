@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookLoop - Gerenciamento de Livros</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .book-card {
+            transition: all 0.3s ease;
+        }
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .description-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .modal-animation {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="min-vh-100">
+        <!-- Header -->
+        <header class="bg-white shadow-sm mb-4">
+            <div class="container">
+                <nav class="navbar navbar-expand-lg navbar-light py-3">
+                    <div class="container-fluid">
+                        <a class="navbar-brand d-flex align-items-center" href="#">
+                            <img src="https://placehold.co/40x40/0d6efd/white?text=BL" alt="BookLoop Logo" class="rounded me-2">
+                            <span class="fs-4 fw-bold">BookLoop</span>
+                        </a>
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div class="collapse navbar-collapse" id="navbarNav">
+                            <ul class="navbar-nav ms-auto">
+                                <li class="nav-item">
+                                    <a class="nav-link active fw-medium" href="#">Livros</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link fw-medium" href="#">Autores</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link fw-medium" href="#">Categorias</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h2 fw-bold">Biblioteca de Livros</h2>
+                <button id="addBookBtn" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Adicionar Livro
+                </button>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" id="searchInput" class="form-control" placeholder="Pesquisar livros...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select">
+                                <option selected>Todos os autores</option>
+                                <option>J.K. Rowling</option>
+                                <option>George R.R. Martin</option>
+                                <option>Stephen King</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select">
+                                <option selected>Todas as categorias</option>
+                                <option>Fantasia</option>
+                                <option>Ficção Científica</option>
+                                <option>Romance</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Books List -->
+            <div id="booksContainer" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+                <!-- Books will be dynamically added here -->
+            </div>
+
+            <!-- Pagination -->
+            <nav class="mt-4 d-flex justify-content-center">
+                <ul class="pagination">
+                    <li class="page-item">
+                        <a class="page-link" href="#" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </main>
+    </div>
+
+    <!-- Add/Edit Book Modal -->
+    <div class="modal fade" id="bookModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-animation">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Adicionar Livro</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="bookForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="bookId">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Título</label>
+                            <input type="text" class="form-control" id="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="author" class="form-label">Autor</label>
+                            <input type="text" class="form-control" id="author" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="coverImage" class="form-label">Capa do Livro</label>
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-cloud-upload-alt fs-1 text-muted mb-2"></i>
+                                    <p class="text-muted small">Clique para enviar ou arraste a imagem</p>
+                                    <input type="file" class="form-control d-none" id="coverImage" accept="image/*">
+                                    <label for="coverImage" class="btn btn-sm btn-outline-primary mt-2">Selecionar Imagem</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" id="saveBookBtn" class="btn btn-primary">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-animation">
+                <div class="modal-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="fas fa-exclamation-circle text-danger fs-1"></i>
+                    </div>
+                    <h5 class="modal-title mb-3">Tem certeza?</h5>
+                    <p class="text-muted">Você está prestes a remover este livro da biblioteca. Esta ação não pode ser desfeita.</p>
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Sim, deletar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Sample Data
+        let books = [
+            {
+                id: 1,
+                title: "O Senhor dos Anéis: A Sociedade do Anel",
+                author: "J.R.R. Tolkien",
+                description: "A jornada épica de Frodo Bolseiro para destruir o Um Anel e salvar a Terra-média.",
+                coverUrl: "https://placehold.co/300x450/0d6efd/white?text=Lord+of+the+Rings",
+                createdAt: "2023-01-15"
+            },
+            {
+                id: 2,
+                title: "Harry Potter e a Pedra Filosofal",
+                author: "J.K. Rowling",
+                description: "O início da aventura de Harry Potter na Escola de Magia e Bruxaria de Hogwarts.",
+                coverUrl: "https://placehold.co/300x450/fcc419/white?text=Harry+Potter",
+                createdAt: "2023-02-20"
+            },
+            {
+                id: 3,
+                title: "1984",
+                author: "George Orwell",
+                description: "Um clássico distópico sobre vigilância governamental e controle da mente.",
+                coverUrl: "https://placehold.co/300x450/6c757d/white?text=1984",
+                createdAt: "2023-03-05"
+            },
+            {
+                id: 4,
+                title: "O Guia do Mochileiro das Galáxias",
+                author: "Douglas Adams",
+                description: "A hilária aventura de Arthur Dent pelo espaço após a destruição da Terra.",
+                coverUrl: "https://placehold.co/300x450/198754/white?text=Hitchhiker's+Guide",
+                createdAt: "2023-03-18"
+            }
+        ];
+
+        // DOM Elements
+        const booksContainer = document.getElementById('booksContainer');
+        const bookModalEl = new bootstrap.Modal(document.getElementById('bookModal'));
+        const deleteModalEl = new bootstrap.Modal(document.getElementById('deleteModal'));
+        const addBookBtn = document.getElementById('addBookBtn');
+        const saveBookBtn = document.getElementById('saveBookBtn');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const bookForm = document.getElementById('bookForm');
+        const searchInput = document.getElementById('searchInput');
+        const modalTitle = document.getElementById('modalTitle');
+
+        // Current book being edited/deleted
+        let currentBookId = null;
+        let isEditing = false;
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            renderBooks();
+            
+            // Event Listeners
+            addBookBtn.addEventListener('click', openAddModal);
+            saveBookBtn.addEventListener('click', saveBook);
+            confirmDeleteBtn.addEventListener('click', deleteBook);
+            searchInput.addEventListener('input', filterBooks);
+        });
+
+        // Render books
+        function renderBooks(booksToRender = books) {
+            booksContainer.innerHTML = '';
+            
+            booksToRender.forEach(book => {
+                const bookCard = document.createElement('div');
+                bookCard.className = 'col';
+                bookCard.innerHTML = `
+                    <div class="card h-100 book-card">
+                        <img src="${book.coverUrl}" class="card-img-top" alt="Capa do livro ${book.title}" style="height: 200px; object-fit: cover;">
+                        <div class="card-body">
+                            <h5 class="card-title text-truncate">${book.title}</h5>
+                            <p class="card-text text-muted small">${book.author}</p>
+                            <p class="card-text description-text">${book.description}</p>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">${formatDate(book.createdAt)}</small>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-primary edit-btn me-1" data-id="${book.id}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${book.id}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                booksContainer.appendChild(bookCard);
+            });
+
+            // Add event listeners to new buttons
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => openEditModal(btn.dataset.id));
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => openDeleteModal(btn.dataset.id));
+            });
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('pt-BR', options);
+        }
+
+        // Open modal for adding new book
+        function openAddModal() {
+            isEditing = false;
+            modalTitle.textContent = 'Adicionar Livro';
+            bookForm.reset();
+            document.getElementById('bookId').value = '';
+            bookModalEl.show();
+        }
+
+        // Open modal for editing book
+        function openEditModal(id) {
+            isEditing = true;
+            modalTitle.textContent = 'Editar Livro';
+            currentBookId = id;
+            const book = books.find(b => b.id == id);
+            
+            if (book) {
+                document.getElementById('bookId').value = book.id;
+                document.getElementById('title').value = book.title;
+                document.getElementById('author').value = book.author;
+                document.getElementById('description').value = book.description;
+                bookModalEl.show();
+            }
+        }
+
+        // Open delete confirmation modal
+        function openDeleteModal(id) {
+            currentBookId = id;
+            deleteModalEl.show();
+        }
+
+        // Save book (add or edit)
+        function saveBook() {
+            const title = document.getElementById('title').value;
+            const author = document.getElementById('author').value;
+            const description = document.getElementById('description').value;
+            
+            if (!title || !author) {
+                alert('Por favor, preencha pelo menos título e autor do livro.');
+                return;
+            }
+            
+            if (isEditing) {
+                // Update existing book
+                const bookIndex = books.findIndex(b => b.id == currentBookId);
+                if (bookIndex !== -1) {
+                    books[bookIndex] = {
+                        ...books[bookIndex],
+                        title,
+                        author,
+                        description
+                    };
+                }
+            } else {
+                // Add new book
+                const newId = books.length > 0 ? Math.max(...books.map(b => b.id)) + 1 : 1;
+                books.push({
+                    id: newId,
+                    title,
+                    author,
+                    description,
+                    coverUrl: `https://placehold.co/300x450/${getRandomColor()}/white?text=${encodeURIComponent(title.substring(0, 15))}`,
+                    createdAt: new Date().toISOString().split('T')[0]
+                });
+            }
+            
+            renderBooks();
+            bookModalEl.hide();
+        }
+
+        // Delete book
+        function deleteBook() {
+            books = books.filter(book => book.id != currentBookId);
+            renderBooks();
+            deleteModalEl.hide();
+            currentBookId = null;
+        }
+
+        // Filter books based on search input
+        function filterBooks() {
+            const searchTerm = searchInput.value.toLowerCase();
+            if (!searchTerm) {
+                renderBooks();
+                return;
+            }
+            
+            const filteredBooks = books.filter(book => 
+                book.title.toLowerCase().includes(searchTerm) || 
+                book.author.toLowerCase().includes(searchTerm) ||
+                book.description.toLowerCase().includes(searchTerm)
+            );
+            
+            renderBooks(filteredBooks);
+        }
+
+        // Helper function to generate random color for book covers
+        function getRandomColor() {
+            const colors = ['0d6efd', 'dc3545', '198754', 'ffc107', '6c757d', '6610f2', 'fd7e14'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+    </script>
+</body>
+</html>
